@@ -25,6 +25,7 @@ export type PickerSnapshot = {
   mode: PickerMode
   second: number | null
   hint: string
+  fingerCount: number
 }
 
 type PickerCallbacks = {
@@ -94,6 +95,7 @@ export class PickerSession {
       mode: this.mode,
       second: this.mode === 'countdown' ? this.lastSecondShown : null,
       hint: hintFor(this.mode, this.fingers.size, neededFingers(this.pickCount), this.winners.length),
+      fingerCount: this.fingers.size,
     })
   }
 

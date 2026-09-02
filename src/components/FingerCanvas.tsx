@@ -6,6 +6,7 @@ export type PickerUiState = {
   mode: PickerMode
   second: number | null
   hint: string
+  fingerCount: number
 }
 
 type FingerCanvasProps = {

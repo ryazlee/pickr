@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { EllipsisVertical } from 'lucide-react'
 import Button from '../Button'
 import FingerCanvas, { type PickerUiState } from '../FingerCanvas'
 import MakerCredit from '../MakerCredit'
@@ -16,12 +17,14 @@ export default function PlayScreen() {
     mode: 'idle',
     second: null,
     hint: 'put fingers down · or tap to drop people',
+    fingerCount: 0,
   })
   const onState = useCallback((snapshot: PickerUiState) => {
     setUi(snapshot)
     if (snapshot.mode !== 'idle') setMenuOpen(false)
   }, [])
   const immersive = ui.mode === 'countdown' || ui.mode === 'reveal'
+  const blurbAway = ui.fingerCount > 0 || immersive
 
   function updatePickCount(next: number) {
     setPickCount(next)
@@ -50,7 +53,14 @@ export default function PlayScreen() {
     >
       <main className="app-main">
         <FingerCanvas pickCount={pickCount} onState={onState} sessionRef={sessionRef} />
-        {ui.mode === 'idle' ? <p className="play-hint">{ui.hint}</p> : null}
+        <div className={['play-blurb', blurbAway ? 'play-blurb--away' : null].filter(Boolean).join(' ')}>
+          <p className="play-blurb__lede">Everyone put a finger on the screen.</p>
+          <p className="play-blurb__note">
+            After a few seconds with no new fingers, we’ll pick who goes first. On a computer, tap
+            to drop people in.
+          </p>
+        </div>
+        {ui.mode === 'idle' && ui.fingerCount > 0 ? <p className="play-status">{ui.hint}</p> : null}
         {ui.mode === 'countdown' && ui.second ? (
           <div
             key={ui.second}
@@ -77,11 +87,7 @@ export default function PlayScreen() {
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((open) => !open)}
             >
-              <span className="snowman" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </span>
+              <EllipsisVertical size={16} aria-hidden="true" />
             </button>
           </div>
         ) : null}
