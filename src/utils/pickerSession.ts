@@ -125,7 +125,7 @@ export class PickerSession {
   }
 
   private onTouchStart = (event: TouchEvent): void => {
-    if ((event.target as HTMLElement | null)?.closest('a, button, .play-hud, .app-header')) return
+    if ((event.target as HTMLElement | null)?.closest('a, button, .play-menu, .play-credit, .app-header')) return
     event.preventDefault()
   }
 
@@ -250,7 +250,7 @@ export class PickerSession {
   }
 
   private onPointerDown = (event: PointerEvent): void => {
-    if ((event.target as HTMLElement | null)?.closest('a, button, .play-hud, .app-header')) return
+    if ((event.target as HTMLElement | null)?.closest('a, button, .play-menu, .play-credit, .app-header')) return
     event.preventDefault()
     this.ensureAudio()
     if (this.mode === 'reveal') return

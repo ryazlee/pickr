@@ -1,21 +1,26 @@
-import { useCallback, useRef, useState } from 'react'
-import AppHeader from '../AppHeader'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Button from '../Button'
 import FingerCanvas, { type PickerUiState } from '../FingerCanvas'
+import MakerCredit from '../MakerCredit'
 import PickCountStepper from '../PickCountStepper'
-import SectionCard from '../SectionCard'
+import ThemeToggle from '../ThemeToggle'
 import type { PickerSession } from '../../utils/pickerSession'
 import { loadPickCount, savePickCount } from '../../utils/pickCount'
 
 export default function PlayScreen() {
   const sessionRef = useRef<PickerSession | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const [pickCount, setPickCount] = useState(() => loadPickCount())
+  const [menuOpen, setMenuOpen] = useState(false)
   const [ui, setUi] = useState<PickerUiState>({
     mode: 'idle',
     second: null,
     hint: 'put fingers down · or tap to drop people',
   })
-  const onState = useCallback((snapshot: PickerUiState) => setUi(snapshot), [])
+  const onState = useCallback((snapshot: PickerUiState) => {
+    setUi(snapshot)
+    if (snapshot.mode !== 'idle') setMenuOpen(false)
+  }, [])
   const immersive = ui.mode === 'countdown' || ui.mode === 'reveal'
 
   function updatePickCount(next: number) {
@@ -24,13 +29,25 @@ export default function PlayScreen() {
     sessionRef.current?.setPickCount(next)
   }
 
+  useEffect(() => {
+    if (!menuOpen) return
+
+    function onPointerDown(event: PointerEvent) {
+      if (menuRef.current?.contains(event.target as Node)) return
+      setMenuOpen(false)
+      event.stopPropagation()
+    }
+
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [menuOpen])
+
   return (
     <div
       className={['app-shell', 'app-shell--play', immersive ? 'app-shell--immersive' : null]
         .filter(Boolean)
         .join(' ')}
     >
-      <AppHeader title="pickr" quiet />
       <main className="app-main">
         <FingerCanvas pickCount={pickCount} onState={onState} sessionRef={sessionRef} />
         {ui.mode === 'idle' ? <p className="play-hint">{ui.hint}</p> : null}
@@ -43,10 +60,34 @@ export default function PlayScreen() {
           </div>
         ) : null}
         {ui.mode === 'idle' ? (
-          <div className="play-hud">
-            <SectionCard>
-              <PickCountStepper value={pickCount} onChange={updatePickCount} />
-            </SectionCard>
+          <div className="play-menu" ref={menuRef}>
+            {menuOpen ? (
+              <div className="play-menu__panel surface-card" role="dialog" aria-label="Winners">
+                <p className="section-label">How many to pick</p>
+                <PickCountStepper value={pickCount} onChange={updatePickCount} />
+                <div className="play-menu__theme">
+                  <ThemeToggle />
+                </div>
+              </div>
+            ) : null}
+            <button
+              type="button"
+              className="icon-btn play-menu__trigger"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              <span className="snowman" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+            </button>
+          </div>
+        ) : null}
+        {ui.mode === 'idle' ? (
+          <div className="play-credit">
+            <MakerCredit />
           </div>
         ) : null}
         {ui.mode === 'reveal' ? (

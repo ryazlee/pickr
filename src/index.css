@@ -521,10 +521,6 @@ a {
   overflow: hidden;
 }
 
-.app-shell--immersive .app-header {
-  display: none;
-}
-
 .play-canvas {
   position: absolute;
   inset: 0;
@@ -591,12 +587,12 @@ a {
 
 .play-hint {
   position: absolute;
-  top: 1rem;
+  top: calc(var(--safe-top) + 1rem);
   left: 1rem;
-  right: 1rem;
+  right: 3.75rem;
   z-index: 2;
   margin: 0;
-  text-align: center;
+  text-align: left;
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--text-secondary);
@@ -607,28 +603,81 @@ a {
   display: none;
 }
 
-.play-hud {
+.play-menu {
+  position: absolute;
+  top: calc(var(--safe-top) + 0.5rem);
+  right: 0.5rem;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+}
+
+.play-menu__trigger {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.snowman {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.snowman span {
+  display: block;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.snowman span:nth-child(1) {
+  width: 5px;
+  height: 5px;
+}
+
+.snowman span:nth-child(2) {
+  width: 7px;
+  height: 7px;
+}
+
+.snowman span:nth-child(3) {
+  width: 9px;
+  height: 9px;
+}
+
+.play-menu__panel {
+  width: min(18.5rem, calc(100vw - 1.5rem));
+  padding: 0.9rem 0.9rem 0.7rem;
+}
+
+.play-menu__panel .section-label {
+  margin-bottom: 0.65rem;
+}
+
+.play-menu__theme {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.55rem;
+  padding-top: 0.35rem;
+}
+
+.play-credit {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: calc(1rem + var(--safe-bottom));
+  bottom: calc(0.85rem + var(--safe-bottom));
   z-index: 4;
-  display: flex;
-  justify-content: center;
-  padding: 0 1rem;
+  text-align: center;
+  pointer-events: none;
 }
 
-.app-shell--immersive .play-hud {
-  display: none;
-}
-
-.play-hud .surface-card {
-  width: auto;
-  min-width: 16rem;
-}
-
-.play-hud .surface-card__body {
-  padding: 0.55rem 0.7rem;
+.play-credit a {
+  pointer-events: auto;
 }
 
 .play-again {

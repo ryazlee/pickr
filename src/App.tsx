@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
-import HomeScreen from './components/screens/HomeScreen'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import PlayScreen from './components/screens/PlayScreen'
 import { ThemeProvider } from './theme'
 import { trackPageview } from './utils/analytics'
@@ -28,8 +27,8 @@ function App() {
       <BrowserRouter basename={basename || undefined}>
         <RouteAnalytics />
         <Routes>
-          <Route path="/" element={<HomeScreen />} />
-          <Route path="/play" element={<PlayScreen />} />
+          <Route path="/" element={<PlayScreen />} />
+          <Route path="/play" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
