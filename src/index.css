@@ -562,13 +562,26 @@ html.gesture-lock body {
   display: grid;
   place-items: center;
   pointer-events: none;
+  opacity: 0;
+}
+
+.play-countdown__digit {
+  display: block;
   font-size: min(62vw, 48vh);
   font-weight: 700;
-  letter-spacing: -0.08em;
-  line-height: 0.8;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0;
+  line-height: 1;
   color: var(--text);
   text-shadow: 0 10px 40px color-mix(in srgb, var(--bg) 70%, transparent);
-  opacity: 0;
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
+}
+
+@supports not (text-box-trim: trim-both) {
+  .play-countdown__digit {
+    translate: 0 0.06em;
+  }
 }
 
 .play-countdown.pop {
@@ -751,7 +764,7 @@ html.gesture-lock body {
     font-size: 0.875rem;
   }
 
-  .play-countdown {
+  .play-countdown__digit {
     font-size: min(58vw, 34vh);
   }
 }

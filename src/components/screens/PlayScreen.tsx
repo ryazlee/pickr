@@ -69,7 +69,7 @@ export default function PlayScreen() {
             key={ui.second}
             className={['play-countdown', ui.second === 1 ? 'urgent' : 'pop'].join(' ')}
           >
-            {ui.second}
+            <span className="play-countdown__digit">{ui.second}</span>
           </div>
         ) : null}
         {ui.mode === 'idle' ? (
