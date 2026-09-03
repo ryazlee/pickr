@@ -658,16 +658,6 @@ html.gesture-lock body {
   text-wrap: pretty;
 }
 
-.play-blurb__computer {
-  display: none;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .play-blurb__computer {
-    display: inline;
-  }
-}
-
 .play-blurb--away {
   opacity: 0;
   transform: translateY(-8px);

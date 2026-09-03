@@ -3,6 +3,8 @@ import { neededFingers } from './pickCount'
 import {
   HOLD_MS,
   HIT_RADIUS,
+  TAP_MOVE,
+  TAP_MS,
   bakeWinnerFill,
   coverRadius,
   hintFor,
@@ -19,6 +21,14 @@ type MouseDrag = {
   startY: number
   moved: boolean
   removeOnClick: boolean
+}
+
+type Hold = {
+  id: string
+  startedAt: number
+  startX: number
+  startY: number
+  moved: boolean
 }
 
 export type PickerSnapshot = {
@@ -38,7 +48,7 @@ export class PickerSession {
   private callbacks: PickerCallbacks
   private pickCount: number
   private fingers = new Map<string, Finger>()
-  private holds = new Map<number, string>()
+  private holds = new Map<number, Hold>()
   private mode: PickerMode = 'idle'
   private stableSince: number | null = null
   private lastSecondShown: number | null = null
@@ -107,6 +117,8 @@ export class PickerSession {
     window.addEventListener('resize', this.onResize)
     window.addEventListener('orientationchange', this.onResize)
     window.visualViewport?.addEventListener('resize', this.onResize)
+    document.addEventListener('visibilitychange', this.onPageHidden)
+    window.addEventListener('pagehide', this.onPageHidden)
     document.addEventListener('touchstart', this.onTouchStart, { passive: false })
     document.addEventListener('touchmove', this.onTouchStart, { passive: false })
     document.addEventListener('contextmenu', this.onContextMenu)
@@ -120,6 +132,8 @@ export class PickerSession {
     window.removeEventListener('resize', this.onResize)
     window.removeEventListener('orientationchange', this.onResize)
     window.visualViewport?.removeEventListener('resize', this.onResize)
+    document.removeEventListener('visibilitychange', this.onPageHidden)
+    window.removeEventListener('pagehide', this.onPageHidden)
     document.removeEventListener('touchstart', this.onTouchStart)
     document.removeEventListener('touchmove', this.onTouchStart)
     document.removeEventListener('contextmenu', this.onContextMenu)
@@ -141,6 +155,13 @@ export class PickerSession {
     event.preventDefault()
   }
 
+  private onPageHidden = (event: Event): void => {
+    if (event.type === 'visibilitychange' && document.visibilityState !== 'hidden') return
+    if (this.mode === 'reveal' || this.holds.size === 0) return
+    for (const hold of this.holds.values()) this.removeFinger(hold.id)
+    this.holds.clear()
+  }
+
   private resize(): void {
     this.dpr = Math.min(window.devicePixelRatio || 1, 2.5)
     const width = this.canvas.clientWidth
@@ -148,6 +169,17 @@ export class PickerSession {
     this.canvas.width = Math.round(width * this.dpr)
     this.canvas.height = Math.round(height * this.dpr)
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
+  }
+
+  private isHeld(id: string): boolean {
+    for (const hold of this.holds.values()) {
+      if (hold.id === id) return true
+    }
+    return false
+  }
+
+  private nextId(): string {
+    return `p-${this.nextMouseId++}`
   }
 
   private isHoldPointer(event: PointerEvent): boolean {
@@ -263,16 +295,42 @@ export class PickerSession {
     this.ensureAudio()
     if (this.mode === 'reveal') return
 
-    this.canvas.setPointerCapture?.(event.pointerId)
+    // Capture mouse only. Capturing several touch pointers makes WebKit/iOS
+    // cancel the rest once a 6th finger lands (phones often track 5).
+    if (!this.isHoldPointer(event)) {
+      try {
+        this.canvas.setPointerCapture(event.pointerId)
+      } catch {
+        // Pointer already gone or not capturable.
+      }
+    }
     const { x, y } = this.clientPoint(event)
+    const hit = this.hitTest(x, y)
 
     if (this.isHoldPointer(event)) {
-      this.addFinger(String(event.pointerId), x, y)
-      this.holds.set(event.pointerId, String(event.pointerId))
+      if (hit && !this.isHeld(hit.id)) {
+        this.mouseDrag = {
+          id: hit.id,
+          pointerId: event.pointerId,
+          startX: x,
+          startY: y,
+          moved: false,
+          removeOnClick: true,
+        }
+        return
+      }
+      const id = this.nextId()
+      this.addFinger(id, x, y)
+      this.holds.set(event.pointerId, {
+        id,
+        startedAt: performance.now(),
+        startX: x,
+        startY: y,
+        moved: false,
+      })
       return
     }
 
-    const hit = this.hitTest(x, y)
     if (hit) {
       this.mouseDrag = {
         id: hit.id,
@@ -285,7 +343,7 @@ export class PickerSession {
       return
     }
 
-    const id = `mouse-${this.nextMouseId++}`
+    const id = this.nextId()
     this.addFinger(id, x, y)
     this.mouseDrag = {
       id,
@@ -302,7 +360,10 @@ export class PickerSession {
 
     if (this.holds.has(event.pointerId)) {
       event.preventDefault()
-      this.moveFinger(this.holds.get(event.pointerId) ?? String(event.pointerId), x, y)
+      const hold = this.holds.get(event.pointerId)
+      if (!hold) return
+      if (Math.hypot(x - hold.startX, y - hold.startY) > TAP_MOVE) hold.moved = true
+      this.moveFinger(hold.id, x, y)
       return
     }
 
@@ -318,8 +379,11 @@ export class PickerSession {
   private onPointerUp = (event: PointerEvent): void => {
     if (this.holds.has(event.pointerId)) {
       event.preventDefault()
-      this.removeFinger(this.holds.get(event.pointerId) ?? String(event.pointerId))
+      const hold = this.holds.get(event.pointerId)
       this.holds.delete(event.pointerId)
+      if (!hold) return
+      const isTap = performance.now() - hold.startedAt < TAP_MS && !hold.moved
+      if (!isTap) this.removeFinger(hold.id)
       return
     }
 
@@ -332,10 +396,9 @@ export class PickerSession {
   }
 
   private onPointerCancel = (event: PointerEvent): void => {
-    if (this.holds.has(event.pointerId)) {
-      this.removeFinger(this.holds.get(event.pointerId) ?? String(event.pointerId))
-      this.holds.delete(event.pointerId)
-    }
+    // A 6th finger (or another system gesture) cancels every active touch even
+    // while people are still holding. Do not treat that as lift; pointerup and
+    // leaving the page still clear them.
     if (this.mouseDrag?.pointerId === event.pointerId) this.mouseDrag = null
   }
 

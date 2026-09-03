@@ -17,7 +17,7 @@ export default function PlayScreen() {
   const [ui, setUi] = useState<PickerUiState>({
     mode: 'idle',
     second: null,
-    hint: 'put fingers down · or tap to drop people',
+    hint: 'hold a finger · or tap to drop a person',
     fingerCount: 0,
   })
   const onState = useCallback((snapshot: PickerUiState) => {
@@ -59,8 +59,8 @@ export default function PlayScreen() {
         <div className={['play-blurb', blurbAway ? 'play-blurb--away' : null].filter(Boolean).join(' ')}>
           <p className="play-blurb__lede">Everyone put a finger on the screen.</p>
           <p className="play-blurb__note">
-            After a few seconds with no new fingers, we’ll pick who goes first.
-            <span className="play-blurb__computer"> On a computer, tap to drop people in.</span>
+            Hold, or tap to drop a person — tap if you need more than five. After a
+            few seconds with no new fingers, we’ll pick who goes first.
           </p>
         </div>
         {ui.mode === 'idle' && ui.fingerCount > 0 ? <p className="play-status">{ui.hint}</p> : null}

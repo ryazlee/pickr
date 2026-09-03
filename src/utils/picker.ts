@@ -2,6 +2,8 @@ import type { Finger, Hsl } from '../types'
 
 export const HOLD_MS = 3000
 export const HIT_RADIUS = 64
+export const TAP_MS = 300
+export const TAP_MOVE = 14
 
 export const PALETTE: Hsl[] = [
   { h: 0, s: 92, l: 56 },
@@ -106,7 +108,7 @@ export function readCssColor(name: string, fallback: string): string {
 
 export function hintFor(mode: 'idle' | 'countdown' | 'reveal', fingerCount: number, need: number, winnerCount: number): string {
   if (mode === 'reveal') return winnerCount > 1 ? 'these ones' : 'this one'
-  if (fingerCount === 0) return 'put fingers down · or tap to drop people'
+  if (fingerCount === 0) return 'hold a finger · or tap to drop a person'
   if (fingerCount < need) {
     const left = need - fingerCount
     return left === 1 ? 'need one more' : `need ${left} more`
