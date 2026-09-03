@@ -100,12 +100,15 @@ export class PickerSession {
   }
 
   private bind(): void {
-    this.canvas.addEventListener('pointerdown', this.onPointerDown)
+    this.canvas.addEventListener('pointerdown', this.onPointerDown, { passive: false })
     window.addEventListener('pointermove', this.onPointerMove, { passive: false })
     window.addEventListener('pointerup', this.onPointerUp)
     window.addEventListener('pointercancel', this.onPointerCancel)
     window.addEventListener('resize', this.onResize)
+    window.addEventListener('orientationchange', this.onResize)
+    window.visualViewport?.addEventListener('resize', this.onResize)
     document.addEventListener('touchstart', this.onTouchStart, { passive: false })
+    document.addEventListener('touchmove', this.onTouchStart, { passive: false })
     document.addEventListener('contextmenu', this.onContextMenu)
   }
 
@@ -115,7 +118,10 @@ export class PickerSession {
     window.removeEventListener('pointerup', this.onPointerUp)
     window.removeEventListener('pointercancel', this.onPointerCancel)
     window.removeEventListener('resize', this.onResize)
+    window.removeEventListener('orientationchange', this.onResize)
+    window.visualViewport?.removeEventListener('resize', this.onResize)
     document.removeEventListener('touchstart', this.onTouchStart)
+    document.removeEventListener('touchmove', this.onTouchStart)
     document.removeEventListener('contextmenu', this.onContextMenu)
   }
 
@@ -127,7 +133,7 @@ export class PickerSession {
   }
 
   private onTouchStart = (event: TouchEvent): void => {
-    if ((event.target as HTMLElement | null)?.closest('a, button, .play-menu, .play-credit, .app-header')) return
+    if ((event.target as HTMLElement | null)?.closest('a, button, .play-menu, .play-credit, .play-again, .app-header')) return
     event.preventDefault()
   }
 
@@ -252,7 +258,7 @@ export class PickerSession {
   }
 
   private onPointerDown = (event: PointerEvent): void => {
-    if ((event.target as HTMLElement | null)?.closest('a, button, .play-menu, .play-credit, .app-header')) return
+    if ((event.target as HTMLElement | null)?.closest('a, button, .play-menu, .play-credit, .play-again, .app-header')) return
     event.preventDefault()
     this.ensureAudio()
     if (this.mode === 'reveal') return

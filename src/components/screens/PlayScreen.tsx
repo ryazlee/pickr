@@ -5,6 +5,7 @@ import FingerCanvas, { type PickerUiState } from '../FingerCanvas'
 import MakerCredit from '../MakerCredit'
 import PickCountStepper from '../PickCountStepper'
 import ThemeToggle from '../ThemeToggle'
+import { lockPageGestures } from '../../utils/lockGestures'
 import type { PickerSession } from '../../utils/pickerSession'
 import { loadPickCount, savePickCount } from '../../utils/pickCount'
 
@@ -32,6 +33,8 @@ export default function PlayScreen() {
     sessionRef.current?.setPickCount(next)
   }
 
+  useEffect(() => lockPageGestures(), [])
+
   useEffect(() => {
     if (!menuOpen) return
 
@@ -56,8 +59,8 @@ export default function PlayScreen() {
         <div className={['play-blurb', blurbAway ? 'play-blurb--away' : null].filter(Boolean).join(' ')}>
           <p className="play-blurb__lede">Everyone put a finger on the screen.</p>
           <p className="play-blurb__note">
-            After a few seconds with no new fingers, we’ll pick who goes first. On a computer, tap
-            to drop people in.
+            After a few seconds with no new fingers, we’ll pick who goes first.
+            <span className="play-blurb__computer"> On a computer, tap to drop people in.</span>
           </p>
         </div>
         {ui.mode === 'idle' && ui.fingerCount > 0 ? <p className="play-status">{ui.hint}</p> : null}
@@ -71,15 +74,6 @@ export default function PlayScreen() {
         ) : null}
         {ui.mode === 'idle' ? (
           <div className="play-menu" ref={menuRef}>
-            {menuOpen ? (
-              <div className="play-menu__panel surface-card" role="dialog" aria-label="Winners">
-                <p className="section-label">How many to pick</p>
-                <PickCountStepper value={pickCount} onChange={updatePickCount} />
-                <div className="play-menu__theme">
-                  <ThemeToggle />
-                </div>
-              </div>
-            ) : null}
             <button
               type="button"
               className="icon-btn play-menu__trigger"
@@ -89,6 +83,15 @@ export default function PlayScreen() {
             >
               <EllipsisVertical size={16} aria-hidden="true" />
             </button>
+            {menuOpen ? (
+              <div className="play-menu__panel surface-card" role="dialog" aria-label="Winners">
+                <p className="section-label">How many to pick</p>
+                <PickCountStepper value={pickCount} onChange={updatePickCount} />
+                <div className="play-menu__theme">
+                  <ThemeToggle />
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
         {ui.mode === 'idle' ? (
